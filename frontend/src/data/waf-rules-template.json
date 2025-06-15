@@ -1,5 +1,6 @@
 {
-  "LibRules": [
+  "Name": "WAF Rules Template",
+  "Rules": [
     {
       "Name": "rule-1",
       "Priority": 0,
