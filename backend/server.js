@@ -3,11 +3,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import {
-  WAFV2Client,
-  ListWebACLsCommand,
-  GetWebACLCommand,
-  GetRuleGroupCommand
-} from "@aws-sdk/client-wafv2";
+  WAFV2Client,  // יוצר לקוח  AWS 
+  ListWebACLsCommand, // מייבא את כל ה - ACLs 
+  GetWebACLCommand, // מביא את כל הפרטים של ACL (by name )
+  GetRuleGroupCommand //  פקודה שמביאה קבוצת חוקים (אם קיימת) 
+} from "@aws-sdk/client-wafv2"; // מתוך הספרייה של .. 
 
 dotenv.config();
 const app = express();
@@ -16,9 +16,12 @@ app.use(cors());
 
 app.get("/api/waf-acls-names/region/:region", async (req, res) => {
   try {
+    // איפה השרת ממוקם בעולם 
+    // אם אנחנו רוצים CLOUDFRONT  אז תמיד - us-east-1
     const regionParam = req.params.region;
     console.log(`Fetching WAF ACLs for region: ${regionParam}`);
 
+    // מגדיר לנו איזה סוג פעולה אנחנו רוצים לבצע ( מה הייעוד של האתר שלנו ) - SCOPE 
     const scope = regionParam.toUpperCase() === "CLOUDFRONT" || regionParam.toUpperCase() === "GLOBAL"
       ? "CLOUDFRONT"
       : "REGIONAL";
@@ -28,16 +31,17 @@ app.get("/api/waf-acls-names/region/:region", async (req, res) => {
       : { region: regionParam };
 
     const wafClientForRegion = new WAFV2Client(clientConfig);
-
     const command = new ListWebACLsCommand({ Scope: scope });
     const response = await wafClientForRegion.send(command);
+
     const acls = response.WebACLs || [];
-
+    console.log(acls);
+    
     const aclNames = acls.map(acl => acl.Name);
-
+    console.log(aclNames);
     res.json(aclNames);
   } catch (error) {
-    console.error("Error fetching WAF ACLs for region:", error);
+    console.error("Error fetching WAF ACLs for region: ", error);
     res.status(500).json({ error: "Error fetching WAF ACLs" });
   }
 });
@@ -62,6 +66,8 @@ app.get("/api/waf-acl-details/region/:region/name/:name", async (req, res) => {
     const listCommand = new ListWebACLsCommand({ Scope: scope });
     const listResponse = await wafClientForRegion.send(listCommand);
     const acls = listResponse.WebACLs || [];
+    console.log(acls);
+    
 
     const acl = acls.find(item => item.Name === name);
     if (!acl) {
